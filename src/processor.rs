@@ -27,6 +27,7 @@ pub struct Event {
 pub struct EventBatch {
     pub service_mask: u32,
     pub events: Vec<u128>,
+    pub timestamp: u32, 
 }
 
 pub fn start(pipeline: Pipeline) -> Sender<EventBatch> {
@@ -59,7 +60,7 @@ fn process(pipeline: Pipeline, recv: Receiver<EventBatch>) {
 
                 // Setting the timestamp via the only consumer guarantees the vec is sorted in
                 // by event timestamp. This makes expiration simple.
-                let timestamp = Utc::now().timestamp() as u32;
+                let timestamp = batch.timestamp;
 
                 for id in &batch.events {
                     event_set.entry(*id)

@@ -35,6 +35,7 @@ struct EventRequest {
     pipeline: String,
     service: String,
     events: Vec<String>,
+    timestamp: u32,
 }
 
 #[post("/events")]
@@ -53,6 +54,8 @@ async fn event_handler(
         None => return "{\"error\": \"service not found\"}",
     };
 
+    let timestamp = req.timestamp;
+
     let events = req
         .events
         .iter()
@@ -66,6 +69,7 @@ async fn event_handler(
         .send(EventBatch {
             service_mask,
             events,
+            timestamp
         })
         .expect("could not send event batch");
 
