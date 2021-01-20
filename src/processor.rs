@@ -151,5 +151,6 @@ fn report_event_status(ev: &Event, pipeline: &str, complete: bool, in_grace_peri
             "event id {:?} did not complete pipeline {:?} : {:#018b}",
             uuid, pipeline, ev.services
         );
+        panic!("okay")
     }
 }
