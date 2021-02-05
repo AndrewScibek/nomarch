@@ -14,7 +14,7 @@ use uuid::Uuid;
 // for that to happen.
 const MAX_CHANNEL_BUFFER: usize = 1000000;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct Event {
     id: u128,
     timestamp: u32,
@@ -22,11 +22,14 @@ pub struct Event {
     // Used as a bitfield to keep track of which services have seen this event.
     // This means that there can only be up to 32 services in a pipeline.
     services: u32,
+
+    meta: HashMap<String,String>,
 }
 
 pub struct EventBatch {
     pub service_mask: u32,
     pub events: Vec<u128>,
+    pub meta: HashMap<String,String>,
 }
 
 pub fn start(pipeline: Pipeline) -> Sender<EventBatch> {
@@ -64,7 +67,9 @@ fn process(pipeline: Pipeline, recv: Receiver<EventBatch>) {
                 for id in &batch.events {
                     event_set.entry(*id)
                         .and_modify(|e| { (*e).services |= batch.service_mask })
-                        .or_insert(Event{id: *id, timestamp, services: batch.service_mask});
+                        .or_insert(Event{id: *id, timestamp, services: batch.service_mask, meta: HashMap::new()});
+                    event_set.entry(*id)
+                        .and_modify(|e| { (*e).meta.extend(batch.meta.clone()) });
                 }
             },
             recv(ticker) -> _ => {
@@ -104,7 +109,7 @@ fn process(pipeline: Pipeline, recv: Receiver<EventBatch>) {
                 // TODO: There is an `into_values` method in nightly that will be useful here once
                 // stabilized
                 for v in event_set.values() {
-                    events.push(*v);
+                    events.push((*v).clone());
                     added += 1;
                 }
 
@@ -142,13 +147,13 @@ fn report_event_status(ev: &Event, pipeline: &str, complete: bool, in_grace_peri
 
     if complete {
         info!(
-            "event id {:?} completed pipeline {:?} : {:#018b}",
-            uuid, pipeline, ev.services
+            "event id {:?} completed pipeline {:?} : {:#018b} --- {:?}",
+            uuid, pipeline, ev.services, ev.meta
         );
     } else {
         info!(
-            "event id {:?} did not complete pipeline {:?} : {:#018b}",
-            uuid, pipeline, ev.services
+            "event id {:?} did not complete pipeline {:?} : {:#018b} --- {:?}",
+            uuid, pipeline, ev.services, ev.meta
         );
     }
 }

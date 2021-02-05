@@ -34,6 +34,7 @@ async fn health_handler() -> impl Responder {
 struct EventRequest {
     pipeline: String,
     service: String,
+    meta: HashMap<String,String>,
     events: Vec<String>,
 }
 
@@ -66,6 +67,7 @@ async fn event_handler(
         .send(EventBatch {
             service_mask,
             events,
+            meta: req.meta.clone(),
         })
         .expect("could not send event batch");
 
