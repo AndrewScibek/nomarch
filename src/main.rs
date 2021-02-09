@@ -62,12 +62,14 @@ async fn event_handler(
             Err(_) => None,
         })
         .collect();
-
+    info!(
+            "event ids {:?} meta {:?}",
+            events, req.meta
+    );
     sender
         .send(EventBatch {
             service_mask,
             events,
-            meta: req.meta.clone(),
         })
         .expect("could not send event batch");
 

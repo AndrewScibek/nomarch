@@ -22,14 +22,11 @@ pub struct Event {
     // Used as a bitfield to keep track of which services have seen this event.
     // This means that there can only be up to 32 services in a pipeline.
     services: u32,
-
-    meta: HashMap<String,String>,
 }
 
 pub struct EventBatch {
     pub service_mask: u32,
     pub events: Vec<u128>,
-    pub meta: HashMap<String,String>,
 }
 
 pub fn start(pipeline: Pipeline) -> Sender<EventBatch> {
@@ -67,9 +64,7 @@ fn process(pipeline: Pipeline, recv: Receiver<EventBatch>) {
                 for id in &batch.events {
                     event_set.entry(*id)
                         .and_modify(|e| { (*e).services |= batch.service_mask })
-                        .or_insert(Event{id: *id, timestamp, services: batch.service_mask, meta: HashMap::new()});
-                    event_set.entry(*id)
-                        .and_modify(|e| { (*e).meta.extend(batch.meta.clone()) });
+                        .or_insert(Event{id: *id, timestamp, services: batch.service_mask});
                 }
             },
             recv(ticker) -> _ => {
@@ -147,13 +142,13 @@ fn report_event_status(ev: &Event, pipeline: &str, complete: bool, in_grace_peri
 
     if complete {
         info!(
-            "event id {:?} completed pipeline {:?} : {:#018b} --- {:?}",
-            uuid, pipeline, ev.services, ev.meta
+            "event id {:?} completed pipeline {:?} : {:#018b}",
+            uuid, pipeline, ev.services
         );
     } else {
         info!(
-            "event id {:?} did not complete pipeline {:?} : {:#018b} --- {:?}",
-            uuid, pipeline, ev.services, ev.meta
+            "event id {:?} did not complete pipeline {:?} : {:#018b}",
+            uuid, pipeline, ev.services
         );
     }
 }
