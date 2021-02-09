@@ -34,6 +34,7 @@ async fn health_handler() -> impl Responder {
 struct EventRequest {
     pipeline: String,
     service: String,
+    meta: HashMap<String,Vec<String>>,
     events: Vec<String>,
 }
 
@@ -61,7 +62,12 @@ async fn event_handler(
             Err(_) => None,
         })
         .collect();
-
+    if !req.meta.is_empty() {
+        info!(
+                "event ids {:?} meta {:?}",
+                events, req.meta
+        );
+    }
     sender
         .send(EventBatch {
             service_mask,
