@@ -34,7 +34,7 @@ async fn health_handler() -> impl Responder {
 struct EventRequest {
     pipeline: String,
     service: String,
-    meta: HashMap<String,String>,
+    meta: HashMap<String,Vec<String>>,
     events: Vec<String>,
 }
 
