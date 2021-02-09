@@ -62,10 +62,12 @@ async fn event_handler(
             Err(_) => None,
         })
         .collect();
-    info!(
-            "event ids {:?} meta {:?}",
-            events, req.meta
-    );
+    if !req.meta.is_empty() {
+        info!(
+                "event ids {:?} meta {:?}",
+                events, req.meta
+        );
+    }
     sender
         .send(EventBatch {
             service_mask,
