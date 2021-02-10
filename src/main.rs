@@ -54,7 +54,7 @@ async fn event_handler(
         None => return "{\"error\": \"service not found\"}",
     };
 
-    let events = req
+    let events:Vec<u128> = req
         .events
         .iter()
         .filter_map(|raw| match Uuid::parse_str(&*raw) {
@@ -62,10 +62,12 @@ async fn event_handler(
             Err(_) => None,
         })
         .collect();
+        
     if !req.meta.is_empty() {
+        let print_events: Vec<Uuid> = events.iter().map(|&x| Uuid::from_u128(x)).collect();
         info!(
                 "event ids {:?} meta {:?}",
-                events, req.meta
+                print_events, req.meta
         );
     }
     sender
